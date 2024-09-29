@@ -16,7 +16,7 @@ def chat_with_bot():
         if user_input.lower() == "quit":
             break
 
-        # Encode the new user input, add the eos_token and return a tensor in Pytorch
+        # Encode the new user input and add the eos_token
         new_user_input_ids = tokenizer.encode(user_input + tokenizer.eos_token, return_tensors='pt')
 
         # Append the new user input to the chat history
@@ -30,6 +30,8 @@ def chat_with_bot():
 
         # Get the bot's response text
         bot_response = tokenizer.decode(bot_response_ids[:, chat_history_ids.shape[-1]:][0], skip_special_tokens=True)
+
+        # Print the bot's response
         print(f"Bot: {bot_response}")
 
         # Update chat history
