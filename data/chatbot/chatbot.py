@@ -1,43 +1,52 @@
 import random
-import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer
 
-# Initialize the model and tokenizer
-model_name = "microsoft/DialoGPT-medium"
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModelForCausalLM.from_pretrained(model_name)
-
-# List of fun facts
-fun_facts = [
-    "Did you know that octopuses have three hearts?",
-    "A group of flamingos is called a 'flamboyance'.",
-    "Bananas are berries, but strawberries aren't!",
-    "Honey never spoils and can last thousands of years!",
-]
-
-user_name = None  # Variable to store the user's name
-
-# Predefined responses to make the chatbot more engaging
-predefined_responses = {
-    "hello": "Hi there! How can I help you today?",
-    "how are you?": "I'm just a program, but I'm here to assist you!",
-    "tell me a fact": "Sure! Did you know that honey never spoils?",
+# Example personality traits
+personality_traits = {
+    "quirky": [
+        "I'm just a bunch of code, but I like to think I'm fun!",
+        "I might not have a favorite color, but if I did, it would be #00ff00!",
+    ],
+    "friendly": [
+        "Hey there! I’m here to help you with anything you need!",
+        "I love chatting with you, it brightens my day!",
+    ],
 }
 
+# Choose a personality
+chosen_personality = "friendly"  # Change to "quirky" for a different style
+
+# To store user info
+user_info = {}
+
+# Function to generate a simple response
+def generate_response(user_input):
+    if "interesting fact" in user_input.lower():
+        return "Did you know that honey never spoils? Archaeologists have found pots of honey in ancient Egyptian tombs that are over 3000 years old and still perfectly edible!"
+    elif "like" in user_input.lower():
+        interest = user_input.split("like")[-1].strip()
+        return f"Oh, you like {interest}? That's cool!"
+    elif "tell me about programming" in user_input.lower():
+        return "Programming is the process of designing and building executable computer software to accomplish a specific task."
+    elif "help" in user_input.lower():
+        return "Of course! I can help with language learning, facts, and more. Just ask!"
+    elif "your name" in user_input.lower():
+        return "I'm a chatbot created to help you learn and have fun!"
+    elif "weather" in user_input.lower():
+        return "I can't check the weather, but I hope it's sunny where you are!"
+    elif "joke" in user_input.lower():
+        return "Why do programmers prefer dark mode? Because light attracts bugs!"
+    else:
+        return "That's interesting! Tell me more."
+
+# Function to chat with the bot
 def chat_with_bot():
-    global user_name  # Access the global variable
+    global user_info
     print("Welcome to the Language Learning Chatbot! Type 'quit' to exit.")
 
     # Ask for the user's name
-    while user_name is None:
-        user_input = input("You: What's your name? ")
-        if user_input.strip():  # Check if input is not empty
-            user_name = user_input.strip()
-            print(f"Bot: Nice to meet you, {user_name}! How can I assist you today?")
-        else:
-            print("Bot: Please enter a valid name.")
-
-    chat_history_ids = None
+    user_name = input("What's your name? ")
+    user_info['name'] = user_name
+    print(f"Bot: Nice to meet you, {user_name}!")
 
     while True:
         user_input = input("You: ")
@@ -45,39 +54,17 @@ def chat_with_bot():
             print("Bot: It was great chatting with you! Have a wonderful day!")
             break
 
-        # Normalize user input for predefined responses
-        user_input_lower = user_input.lower()
-
-        # Check for predefined responses
-        if user_input_lower in predefined_responses:
-            print(f"Bot: {predefined_responses[user_input_lower]}")
-            continue
-
-        # Random fun fact
-        if "fact" in user_input_lower:
-            print(f"Bot: {random.choice(fun_facts)}")
-            continue
-        
-        # Encode the new user input and add the eos_token
-        new_user_input_ids = tokenizer.encode(user_input + tokenizer.eos_token, return_tensors='pt')
-
-        # Append the new user input to the chat history
-        if chat_history_ids is None:
-            chat_history_ids = new_user_input_ids
+        # Engage with personality
+        if chosen_personality == "friendly":
+            response = random.choice(personality_traits["friendly"])
+            print(f"Bot: {response}")
         else:
-            chat_history_ids = torch.cat([chat_history_ids, new_user_input_ids], dim=-1)
+            response = random.choice(personality_traits["quirky"])
+            print(f"Bot: {response}")
 
-        # Get the bot's response
-        bot_response_ids = model.generate(chat_history_ids, max_length=1000, pad_token_id=tokenizer.eos_token_id)
-
-        # Get the bot's response text
-        bot_response = tokenizer.decode(bot_response_ids[:, chat_history_ids.shape[-1]:][0], skip_special_tokens=True)
-
-        # Print the bot's response
-        print(f"Bot: {bot_response}")
-
-        # Update chat history
-        chat_history_ids = bot_response_ids
+        # Generate a response
+        bot_reply = generate_response(user_input)
+        print(f"Bot: {bot_reply}")
 
 if __name__ == "__main__":
     chat_with_bot()
